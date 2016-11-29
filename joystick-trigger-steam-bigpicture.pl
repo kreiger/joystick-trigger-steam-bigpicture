@@ -6,20 +6,23 @@ use Proc::Daemon;
 use warnings;
 use strict;
 
-my $daemon = Proc::Daemon->new;
+die "DISPLAY not set!\n" unless $ENV{DISPLAY};
 
-exit if $daemon->Init;
+Proc::Daemon->new->Init;
 
 while (1) {
-    eval {
-        my $js = new Linux::Joystick;
-
-        while ( my $event = $js->nextEvent ) {
-            if ($event->buttonUp(8)) {
-                system("/usr/games/steam", "-bigpicture");
-                $js->flushEvents
-            }
+    my $js;
+    while (!($js = new Linux::Joystick("/dev/input/js0"))) {
+        sleep 1;
+    }
+    print "Opened joystick\n";
+    while ( $js and my $event = $js->nextEvent ) {
+        if ($event->buttonUp(8)) {
+            print "Starting Steam!\n";
+            system("/usr/games/steam", "-bigpicture");
+            print "Steam exited.\n";
+            $js->flushEvents;
+            $js = undef;
         }
-    };
-    sleep 1;
+    }
 }
