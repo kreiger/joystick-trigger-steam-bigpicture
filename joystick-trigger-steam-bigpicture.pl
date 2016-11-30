@@ -18,11 +18,11 @@ while (1) {
     print "Opened joystick\n";
     while ( $js and my $event = $js->nextEvent ) {
         if ($event->buttonUp(8)) {
+            close $js->fileHandle;
+            $js = undef;
             print "Starting Steam!\n";
             system("/usr/games/steam", "-bigpicture");
             print "Steam exited.\n";
-            $js->flushEvents;
-            $js = undef;
         }
     }
 }
